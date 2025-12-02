@@ -13,72 +13,71 @@ app.use(cors({
     credentials: false
 }));
 
-mongoose.connect(process.env.MONGODB_URI, { dbName: 'Aula'})
+mongoose.connect(process.env.MONGODB_URI, { dbName: 'AF'})
     .then(() => console.log('Conectado ao MongoDB'))
     .catch(err => console.error('Erro na conexão:', err.mensage))
 
-const alunoSchema = new mongoose.Schema({
-    nome: { type: String, required: true, trim: true, minlength: 2},
-    idade: { type: Number, required: true, min: 0, max: 120},
-    curso: { type: String, required: true, trim: true},
-    notas: { type: [Number], default: [], validate: v => v.every(n => n >=0 && n <= 10)}
-}, { collection: 'Alunos', timestamps: true });
-const Aluno = mongoose.model('Aluno', alunoSchema, 'Alunos');
+const movimentacoesSchema = new mongoose.Schema({
+    data: { type: String, required: true},
+    valor: { type: Number, required: true},
+    tipo: { type: String, required: true, trim: true},
+}, { collection: 'Movimentacoes', timestamps: true });
+const Movimentacao = mongoose.model('AF', movimentacoesSchema, 'Movimentacoes');
 
 app.get('/', (req, res) => res.json({ msg: 'API rodando' }));
 
-app.post('/aluno', async (req, res) => {
-    const aluno = await Aluno.create(req. body);
-    res.status(201).json(aluno);
+app.post('/movimentacao', async (req, res) => {
+    const movimentacao = await Movimentacao.create(req. body);
+    res.status(201).json(movimentacao);
 })
 
-app.get('alunos', async (req, res) => {
-    const alunos = await Aluno.find();
-    res.json(alunos);
+app.get('/movimentacoes', async (req, res) => {
+    const movimentacoes = await Movimentacao.find();
+    res.json(movimentacoes);
 })
 
 app.listen(process.env.PORT, () => 
     console.log(`Servidor rodando em http://localhost:${process.env.PORT}`)
 )
 
-app.put('/alunos/:id', async (req, res) => {
+app.put('/movimentacoes/:id', async (req, res) => {
     try {
         if(!mongoose.isValidObjectId(req.params.id)) {
             return res.status(400).json({ erro: 'ID inválido'});
         }
-        const aluno = await Aluno.findByIdAndUpdate(
+        const movimentacao = await Movimentacao.findByIdAndUpdate(
             req.params.id,
             req.body,
             { new: true, runValidators: true, overwrite: true}
 
         );
-        if (!aluno) return res.status(404).json({ error: 'Aluno não encontrdado' });
-        res.json(aluno);
+        if (!movimentacao) return res.status(404).json({ error: 'Movimentação não encontrdada' });
+        res.json(movimentacao);
     } catch(err) {
         res.status(400).json({ error: err.message});
     }
 });
 
-app.delete('/alunos/:id', async (req, res) => {
+app.delete('/movimentacoes/:id', async (req, res) => {
     try {
         if(!mongoose.isValidObjectId(req.params.id)) {
             return res.status(400).json({ erro: 'ID inválido'});
         }
-        const aluno = await Aluno.findByIdAndDelete(req.params.id);
-        if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
+        const movimentacao = await Movimentacao.findByIdAndDelete(req.params.id);
+        if (!movimentacao) return res.status(404).json({ error: 'Movimentação não encontrada' });
         res.json({ ok: true});
     } catch {
         res.status(500).json({ error: err.message});
     }
 });
 
-app.get('/alunos/:id', async (req, res) => {
+app.get('/movimentacoes/:id', async (req, res) => {
     try {
         if (!mongoose.isValidObjectId(req.params.id)) {
             return res.status(400).json({ erro: 'Id inválido'});
         }
-        const aluno = await Aluno.findById(req.params.id);
-        if (!aluno) return res.status(404).json({ error: 'Aluno não encontrado' });
+        const movimentacao = await Aluno.findById(req.params.id);
+        if (!movimentacao) return res.status(404).json({ error: 'Movimentação não encontrada' });
         res.json({ ok: true});
     } catch {
         res.status(500).json({ error: err.message});
