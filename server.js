@@ -26,7 +26,7 @@ const Movimentacao = mongoose.model('AF', movimentacoesSchema, 'Movimentacoes');
 
 app.get('/', (req, res) => res.json({ msg: 'API rodando' }));
 
-app.post('/movimentacao', async (req, res) => {
+app.post('/movimentacoes', async (req, res) => {
     const movimentacao = await Movimentacao.create(req. body);
     res.status(201).json(movimentacao);
 })
@@ -34,7 +34,17 @@ app.post('/movimentacao', async (req, res) => {
 app.get('/movimentacoes', async (req, res) => {
     const movimentacoes = await Movimentacao.find();
     res.json(movimentacoes);
-})
+});
+
+app.get('/movimentacoes/saldo', async (req, res) => {
+    const movimentacoes = await Movimentacao.find();
+    const saldo = movimentacoes.reduce((total, mov) => {
+        return mov.tipo == 'ENTRADA' 
+        ? total + mov.valor
+        : total - mov.valor;
+    }, 0);
+    res.json(saldo);
+});
 
 app.listen(process.env.PORT, () => 
     console.log(`Servidor rodando em http://localhost:${process.env.PORT}`)
@@ -81,5 +91,20 @@ app.get('/movimentacoes/:id', async (req, res) => {
         res.json({ ok: true});
     } catch {
         res.status(500).json({ error: err.message});
+    }
+});
+
+app.delete('/movimentacoes/:id', async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ error: 'Id inválido'});
+        }
+
+        const movimentacao = await Aluno.findById(req.params.id);
+        if (!movimentacao) return res.status(404).json({ error: 'Movimentação não encontrada'});
+
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
